@@ -32,10 +32,12 @@ class get_ball_env(gym.Env):
         packet = grSim_Packet_pb2.grSim_Packet()
          
         ball = packet.replacement.ball
-        ball.x = 1.0
-        ball.y = 0.0
-        ball.vx = 1.0
-        ball.vy = 0.0
+        ball.x = 9.0 * np.random.rand() - 4.5
+        ball.y = 6.0 * np.random.rand() - 3.0
+        ball_vel = 6.5 * np.random.rand()
+        theta = 2 * np.pi * np.random.rand()
+        ball.vx = ball_vel * np.cos(theta)
+        ball.vy = ball_vel * np.sin(theta)
          
         robot = packet.replacement.robots.add()
         robot.x = 0.0
