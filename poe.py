@@ -6,4 +6,3 @@ env = get_ball_env.get_ball_env()
 while True:
     time.sleep(3)
     env.reset()
-    print("poe")

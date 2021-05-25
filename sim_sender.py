@@ -55,7 +55,6 @@ class SimSender(object):
 
 
     def env_reset(self, robot, ball):
-        print("reset")
         packet = grSim_Packet_pb2.grSim_Packet()
 
         replace_ball = packet.replacement.ball
