@@ -17,7 +17,7 @@ class get_ball_env(gym.Env):
 
         # 状態空間の設定 
         # robot_x, robot_y, robot_theta, ball_x, ball_y 
-        obs_high = np.array([5.0, 4.0, np.pi, 4.5, 3.0])
+        obs_high = np.array([5.0, 3.5, np.pi, 4.5, 3.0])
         self.observation_space = gym.spaces.Box(low=-obs_high, high=obs_high)
 
         self.fin_pos = np.array([0, 0.09])
@@ -40,9 +40,9 @@ class get_ball_env(gym.Env):
         ball.vy = ball_vel * np.sin(theta)
          
         robot = packet.replacement.robots.add()
-        robot.x = 0.0
-        robot.y = 0.0
-        robot.dir = 0.0
+        robot.x = 10.0 * np.random.rand() - 5.0
+        robot.y = 7.0 * np.random.rand() - 3.5
+        robot.dir = 2 * np.pi * np.random.rand()
         robot.id = 7
         robot.yellowteam = True
         robot.turnon = True
