@@ -9,18 +9,11 @@ from PIL import Image
 import gym
 from gym import wrappers
 import matplotlib.pyplot as plt
-import data_pb2
 
 from buffer import ReplayBuffer
 from models import ActorNetwork, CriticNetwork
 
 from get_ball_env import get_ball_env
-
-from socket import socket, AF_INET, SOCK_DGRAM
-HOST = ''
-PORT = 5555
-ADDRESS = "127.0.0.1"
-s = socket(AF_INET, SOCK_DGRAM)
 
 @dataclass
 class Experience:
@@ -137,14 +130,11 @@ class DDPGAgent:
 
         steps = 0
 
+        count = 0
+
         done = False
 
         state = self.env.reset()
-        data = data_pb2.Data()
-        data.robot_vx = 0.0
-        data.robot_vy = 0.0
-        data.robot_omega = 0.0
-        s.sendto(data.SerializeToString(), (ADDRESS, PORT))
 
         while not done:
 
@@ -152,29 +142,35 @@ class DDPGAgent:
                 action = np.random.uniform(-1, 1, size=self.ACTION_SPACE)
             else:
                 action = self.actor_network.sample_action(state, noise=self.stdev)
+                print(action)
             
-            data = data_pb2.Data()
-            data.robot_vx = action[0]
-            data.robot_vy = action[1]
-            data.robot_omega = action[2]
-            s.sendto(data.SerializeToString(), (ADDRESS, PORT))
+            #next_state, reward, done, _ = self.env.step(action)
+            self.env.step(action)
 
-            s.bind(('', 5555))
-            msg, address = s.recvfrom(8192)
-            data.ParseFromString(msg)
-            next_state = np.array([data.robot_x, data.robot_y, data.robot_theta,
-                  data.ball_x, data.ball_y])
+            steps += 1
+
+            robot = self.env.robot
+            ball = self.env.ball
+
+            next_state = np.array([robot.x, robot.y, robot.theta, ball.x, ball.y])
             
             reward = -0.005
-            robot_pos = np.array([data.robot_x, data.robot_y])
-            ball_pos = np.array([data.ball_x, data.ball_y])
+            robot_pos = np.array([robot.x, robot.y])
+            ball_pos = np.array([ball.x, ball.y])
             reward += 1 / np.linalg.norm(robot_pos - ball_pos)
-            if (np.abs(data.robot_x) > 4.5 or np.abs(data.robot_y) > 3.0):
-              done = True
-              reward += -1
-            if (np.abs(data.ball_x) > 4.5 or np.abs(data.ball_y) > 3.0):
-              done = True
-              reward += -0.5
+            if (np.linalg.norm(robot_pos - ball_pos) < 170):
+                reward += 0.1
+                count += 1
+                if (count == 10):
+                    True
+            if (steps == 1000):
+                done = True
+            if (np.abs(robot.x) > 4500 or np.abs(robot.y) > 3000):
+                done = True
+                reward += -1.0
+            if (np.abs(ball.x) > 4500 or np.abs(ball.y) > 3000):
+                done = True
+                reward += -0.5
 
             exp = Experience(state, action, reward, next_state, done)
 
@@ -183,8 +179,6 @@ class DDPGAgent:
             state = next_state
 
             total_reward += reward
-
-            steps += 1
 
             self.global_steps += 1
 
@@ -307,7 +301,7 @@ class DDPGAgent:
 
 
 def main():
-    N_EPISODES = 100
+    N_EPISODES = 1000
     agent = DDPGAgent()
     history = agent.play(n_episodes=N_EPISODES)
 
@@ -317,7 +311,7 @@ def main():
     plt.ylabel("Total Rewards")
     plt.savefig("history/log.png")
 
-    agent.test_play(n=8, monitordir="history", load_model=True)
+    #agent.test_play(n=8, monitordir="history", load_model=True)
 
 
 if __name__ == "__main__":
