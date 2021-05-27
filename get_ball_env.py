@@ -2,6 +2,8 @@
 # coding: UTF-8
 import gym
 import sim_sender
+import simple_receiver
+import threading
 import numpy as np
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
@@ -26,8 +28,17 @@ class get_ball_env(gym.Env):
         self.fig = plt.figure()
         self.fig.show()
         self.sender = sim_sender.SimSender()
+        rcv = simple_receiver.receiver()
+        self.robot = rcv.robot
+        self.ball = rcv.ball
+        thread = threading.Thread(target=rcv.receive)
+        thread.start()
 
     def reset(self):
+        robo = self.robot
+        bol = self.ball
+        print(robo.x, robo.y, robo.theta)
+        print(bol.x, bol.y)
         # シミュレータの初期化処理
         packet = grSim_Packet_pb2.grSim_Packet()
          
