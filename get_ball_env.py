@@ -58,26 +58,20 @@ class get_ball_env(gym.Env):
         robot.yellowteam = True
         robot.turnon = True
         self.sender.env_reset(robot, ball)
-        self.robot_pos = np.array([robot.x, robot.y, robot.dir])
-        self.ball_pos = np.array([ball.x, ball.y])
+        self.robot_pos = np.array([robot.x * 1000.0, robot.y * 1000.0, robot.dir])
+        self.ball_pos = np.array([ball.x * 1000.0, ball.y * 1000.0])
         self.steps = 0
         return np.concatenate([self.robot_pos, self.ball_pos])
 
     def step(self, action):
         # ステップを進める処理
-        self.robot_pos = self.robot_pos + 0.5 * (self.robot_vel - self.ball_vel) * self.cycle
+        self.sender.send_commands(action)
         reward = 0.0
         done = False
-        if (np.linalg.norm(self.robot_pos - self.fin_pos) < np.linalg.norm(prev_robot_pos - self.fin_pos)):
-            reward = 0.05
-        if (np.linalg.norm(self.robot_pos - self.fin_pos) < 0.01):
-            reward = 1
-        if (self.steps == 100 or np.linalg.norm(self.robot_pos - self.fin_pos) > 5.0 or (np.linalg.norm(self.robot_pos - self.fin_pos) > 1.0 and np.linalg.norm(prev_robot_pos - self.fin_pos) < np.linalg.norm(self.robot_pos))):
-            done = True
         self.steps = self.steps + 1
-        self.render()
+        #self.render()
         #infoの部分は使わなかったので{}を返却
-        return np.concatenate([self.robot_pos, self.robot_vel, self.ball_vel]), reward, done, {}
+        #return np.concatenate([self.robot_pos, self.robot_vel, self.ball_vel]), reward, done, {}
 
     def render(self):
         #self.fig.show()
