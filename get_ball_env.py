@@ -4,6 +4,7 @@ import gym
 import sim_sender
 import simple_receiver
 import threading
+import time
 import numpy as np
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
@@ -35,10 +36,6 @@ class get_ball_env(gym.Env):
         thread.start()
 
     def reset(self):
-        robo = self.robot
-        bol = self.ball
-        print(robo.x, robo.y, robo.theta)
-        print(bol.x, bol.y)
         # シミュレータの初期化処理
         packet = grSim_Packet_pb2.grSim_Packet()
          
@@ -51,13 +48,14 @@ class get_ball_env(gym.Env):
         ball.vy = ball_vel * np.sin(theta)
          
         robot = packet.replacement.robots.add()
-        robot.x = 10.0 * np.random.rand() - 5.0
-        robot.y = 7.0 * np.random.rand() - 3.5
+        robot.x = 9.0 * np.random.rand() - 4.5
+        robot.y = 6.0 * np.random.rand() - 3.0
         robot.dir = 2 * np.pi * np.random.rand()
         robot.id = 7
         robot.yellowteam = True
         robot.turnon = True
         self.sender.env_reset(robot, ball)
+        time.sleep(0.2)
         self.robot_pos = np.array([robot.x * 1000.0, robot.y * 1000.0, robot.dir])
         self.ball_pos = np.array([ball.x * 1000.0, ball.y * 1000.0])
         self.steps = 0
