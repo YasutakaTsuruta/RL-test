@@ -142,7 +142,6 @@ class DDPGAgent:
                 action = np.random.uniform(-1, 1, size=self.ACTION_SPACE)
             else:
                 action = self.actor_network.sample_action(state, noise=self.stdev)
-                print(action)
             
             #next_state, reward, done, _ = self.env.step(action)
             self.env.step(action)
@@ -157,13 +156,16 @@ class DDPGAgent:
             reward = -0.005
             robot_pos = np.array([robot.x, robot.y])
             ball_pos = np.array([ball.x, ball.y])
-            reward += 1 / np.linalg.norm(robot_pos - ball_pos)
-            if (np.linalg.norm(robot_pos - ball_pos) < 170):
+            dist = np.linalg.norm(robot_pos - ball_pos)
+            poe = 10 / dist
+            if (dist > 100):
+                reward += 10 / dist
+            if (dist < 170):
                 reward += 0.1
                 count += 1
                 if (count == 10):
-                    True
-            if (steps == 1000):
+                    done = True
+            if (steps == 500):
                 done = True
             if (np.abs(robot.x) > 4500 or np.abs(robot.y) > 3000):
                 done = True

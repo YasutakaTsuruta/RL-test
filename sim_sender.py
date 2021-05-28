@@ -30,7 +30,7 @@ class SimSender(object):
         # 走行速度
         packet_command.veltangent = vel[0] * 3
         packet_command.velnormal = vel[1] * 3
-        packet_command.velangular = vel[2] * 4 * np.pi
+        packet_command.velangular = vel[2] * np.pi
 
         # キック速度
         packet_command.kickspeedx =  0
