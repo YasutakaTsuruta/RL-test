@@ -5,7 +5,7 @@ from proto import ssl_vision_wrapper_pb2
 
 class receiver():
     def __init__(self):
-        multicast_if_addr='192.168.10.123'  
+        multicast_if_addr='192.168.11.15'  
 
         multicast_group='224.5.23.2'
         multicast_port=10006

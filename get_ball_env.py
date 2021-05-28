@@ -14,13 +14,13 @@ from proto import grSim_Packet_pb2
 class get_ball_env(gym.Env):
     def __init__(self):
         # アクションの数の設定
-        # robot_x, robot_y, robot_omega
-        act_high = np.array([1.0, 1.0, 1.0])
+        # robot_x, robot_y
+        act_high = np.array([1.0, 1.0])
         self.action_space = gym.spaces.Box(low=-act_high, high=act_high) 
 
         # 状態空間の設定 
-        # robot_x, robot_y, robot_theta, ball_x, ball_y 
-        obs_high = np.array([5.0, 3.5, np.pi, 4.5, 3.0])
+        # ball_x, ball_y 
+        obs_high = np.array([5.0, 5.0])
         self.observation_space = gym.spaces.Box(low=-obs_high, high=obs_high)
 
         self.fin_pos = np.array([0, 0.09])
@@ -61,8 +61,9 @@ class get_ball_env(gym.Env):
         self.steps = 0
         return np.concatenate([self.robot_pos, self.ball_pos])
 
-    def step(self, action):
+    def step(self, action, omega):
         # ステップを進める処理
+        action = np.array([action[0], action[1], omega])
         self.sender.send_commands(action)
         reward = 0.0
         done = False

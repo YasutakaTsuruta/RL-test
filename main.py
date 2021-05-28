@@ -15,6 +15,13 @@ from models import ActorNetwork, CriticNetwork
 
 from get_ball_env import get_ball_env
 
+def make_omega(state):
+  return 0.0#2.0 * np.arctan2(state[1], state[0]) / np.pi
+
+def make_state(robot, ball):
+  theta = robot.theta
+  return np.array([ball.x * np.cos(theta) - ball.y * np.sin(theta) + robot.x, ball.x * np.sin(theta) + ball.y * np.cos(theta) + robot.y])
+
 @dataclass
 class Experience:
 
@@ -35,13 +42,13 @@ class DDPGAgent:
 
     MIN_EXPERIENCES = 300
 
-    ACTION_SPACE = 3
+    ACTION_SPACE = 2
 
-    OBSERVATION_SPACE = 5
+    OBSERVATION_SPACE = 2
 
     UPDATE_PERIOD = 4
 
-    START_EPISODES = 20
+    START_EPISODES = 1
 
     TAU = 0.02
 
@@ -134,7 +141,8 @@ class DDPGAgent:
 
         done = False
 
-        state = self.env.reset()
+        self.env.reset()
+        state = make_state(self.env.robot, self.env.ball)
 
         while not done:
 
@@ -144,19 +152,18 @@ class DDPGAgent:
                 action = self.actor_network.sample_action(state, noise=self.stdev)
             
             #next_state, reward, done, _ = self.env.step(action)
-            self.env.step(action)
+            self.env.step(action, make_omega(state))
 
             steps += 1
 
             robot = self.env.robot
             ball = self.env.ball
-
-            next_state = np.array([robot.x, robot.y, robot.theta, ball.x, ball.y])
-            
+            next_state = make_state(robot, ball) 
             reward = -0.005
             robot_pos = np.array([robot.x, robot.y])
             ball_pos = np.array([ball.x, ball.y])
             dist = np.linalg.norm(robot_pos - ball_pos)
+
             poe = 10 / dist
             if (dist > 100):
                 reward += 10 / dist
@@ -165,14 +172,14 @@ class DDPGAgent:
                 count += 1
                 if (count == 10):
                     done = True
-            if (steps == 500):
+            if (steps == 5000):
                 done = True
             if (np.abs(robot.x) > 4500 or np.abs(robot.y) > 3000):
                 done = True
-                reward += -1.0
+                #reward += -1.0
             if (np.abs(ball.x) > 4500 or np.abs(ball.y) > 3000):
                 done = True
-                reward += -0.5
+                #reward += -0.5
 
             exp = Experience(state, action, reward, next_state, done)
 
@@ -282,13 +289,14 @@ class DDPGAgent:
 
             done = False
 
-            state = env.reset()
+            self.env.reset()
+            state = make_state(env.robot, env.ball)
 
             while not done:
 
                 action = self.actor_network.sample_action(state, noise=False)
 
-                next_state, reward, done, _ = env.step(action)
+                next_state, reward, done, _ = env.step(action, make_omega(state))
 
                 state = next_state
 

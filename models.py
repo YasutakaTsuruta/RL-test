@@ -56,6 +56,7 @@ class ActorNetwork(tf.keras.Model):
             action += np.random.normal(0, noise*self.ACTION_RANGE, size=self.action_space)
             action = np.clip(action, -self.ACTION_RANGE, self.ACTION_RANGE)
 
+        print(action)
         return action
 
 
