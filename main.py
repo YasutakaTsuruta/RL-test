@@ -16,11 +16,13 @@ from models import ActorNetwork, CriticNetwork
 from get_ball_env import get_ball_env
 
 def make_omega(state):
-  return 0.0#2.0 * np.arctan2(state[1], state[0]) / np.pi
+  return 2.0 * np.arctan2(state[1], state[0]) / np.pi
 
 def make_state(robot, ball):
-  theta = robot.theta
-  return np.array([ball.x * np.cos(theta) - ball.y * np.sin(theta) + robot.x, ball.x * np.sin(theta) + ball.y * np.cos(theta) + robot.y])
+  theta = -robot.theta
+  x = ball.x - robot.x
+  y = ball.y - robot.y
+  return np.array([x * np.cos(theta) - y * np.sin(theta), x * np.sin(theta) + y * np.cos(theta)])
 
 @dataclass
 class Experience:
@@ -48,7 +50,7 @@ class DDPGAgent:
 
     UPDATE_PERIOD = 4
 
-    START_EPISODES = 1
+    START_EPISODES = 20
 
     TAU = 0.02
 
@@ -159,19 +161,18 @@ class DDPGAgent:
             robot = self.env.robot
             ball = self.env.ball
             next_state = make_state(robot, ball) 
-            reward = -0.005
+            reward = 0.0
             robot_pos = np.array([robot.x, robot.y])
             ball_pos = np.array([ball.x, ball.y])
             dist = np.linalg.norm(robot_pos - ball_pos)
 
-            poe = 10 / dist
             if (dist > 100):
                 reward += 10 / dist
             if (dist < 170):
                 reward += 0.1
                 count += 1
-                if (count == 10):
-                    done = True
+                #if (count == 10):
+                    #done = True
             if (steps == 5000):
                 done = True
             if (np.abs(robot.x) > 4500 or np.abs(robot.y) > 3000):

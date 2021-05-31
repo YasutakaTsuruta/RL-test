@@ -16,8 +16,10 @@ class SimSender(object):
 
         self._MAX_KICK_SPEED = 8.0 # m/s
 
+        self._vel = np.array([0.0, 0.0])
 
-    def send_commands(self, vel):
+
+    def send_commands(self, action):
         packet = grSim_Packet_pb2.grSim_Packet()
         packet.commands.timestamp = time.time()
         packet.commands.isteamyellow = True
@@ -28,10 +30,15 @@ class SimSender(object):
         packet_command.id = 7
 
         # 走行速度
-        packet_command.veltangent = 0#vel[0] * 3
-        packet_command.velnormal = vel[1] * 3
-        packet_command.velangular = 0#vel[2] * np.pi
-        print(packet_command.velangular)
+        self._vel[0] += action[0]
+        self._vel[1] += action[1]
+        packet_command.veltangent = self._vel[0] * 3
+        packet_command.velnormal = self._vel[1] * 3
+        packet_command.velangular = action[2] * np.pi
+        #print('start')
+        #print(packet_command.veltangent)
+        #print(packet_command.velnormal)
+        #print(packet_command.velangular)
 
         # キック速度
         packet_command.kickspeedx =  0

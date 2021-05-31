@@ -42,7 +42,7 @@ class get_ball_env(gym.Env):
         ball = packet.replacement.ball
         ball.x = 9.0 * np.random.rand() - 4.5
         ball.y = 6.0 * np.random.rand() - 3.0
-        ball_vel = 6.5 * np.random.rand()
+        ball_vel = 0.0 #6.5 * np.random.rand()
         theta = 2 * np.pi * np.random.rand()
         ball.vx = ball_vel * np.cos(theta)
         ball.vy = ball_vel * np.sin(theta)
