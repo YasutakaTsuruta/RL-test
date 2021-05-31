@@ -44,8 +44,6 @@ class DDPGAgent:
 
     MIN_EXPERIENCES = 300
 
-    ACTION_SPACE = 2
-
     OBSERVATION_SPACE = 2
 
     UPDATE_PERIOD = 4
@@ -62,9 +60,9 @@ class DDPGAgent:
 
         self.env = get_ball_env()
 
-        self.actor_network = ActorNetwork(action_space=self.ACTION_SPACE)
+        self.actor_network = ActorNetwork(action_space=self.env.action_space.shape[0])
 
-        self.target_actor_network = ActorNetwork(action_space=self.ACTION_SPACE)
+        self.target_actor_network = ActorNetwork(action_space=self.env.action_space.shape[0])
 
         self.critic_network = CriticNetwork()
 
@@ -87,7 +85,7 @@ class DDPGAgent:
         dummy_state = np.random.normal(0, 0.1, size=self.OBSERVATION_SPACE)
         dummy_state = (dummy_state[np.newaxis, ...]).astype(np.float32)
 
-        dummy_action = np.random.normal(0, 0.1, size=self.ACTION_SPACE)
+        dummy_action = np.random.normal(0, 0.1, size=self.env.action_space.shape[0])
         dummy_action = (dummy_action[np.newaxis, ...]).astype(np.float32)
 
         self.actor_network.call(dummy_state)
@@ -149,7 +147,7 @@ class DDPGAgent:
         while not done:
 
             if random:
-                action = np.random.uniform(-1, 1, size=self.ACTION_SPACE)
+                action = np.random.uniform(-1, 1, size=self.env.action_space.shape[0])
             else:
                 action = self.actor_network.sample_action(state, noise=self.stdev)
             
