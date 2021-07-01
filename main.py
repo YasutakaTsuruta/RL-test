@@ -68,7 +68,7 @@ class DDPGAgent:
 
         self.target_critic_network = CriticNetwork()
 
-        self.stdev = 0.2
+        self.stdev = 0.4
 
         self.buffer = ReplayBuffer(max_experiences=self.MAX_EXPERIENCES)
 
@@ -103,7 +103,6 @@ class DDPGAgent:
         recent_scores = collections.deque(maxlen=10)
 
         for n in range(n_episodes):
-
 
             if n <= self.START_EPISODES:
                 total_reward, localsteps = self.play_episode(random=True)
@@ -147,7 +146,7 @@ class DDPGAgent:
         while not done:
 
             if random:
-                action = np.random.uniform(-1, 1, size=self.env.action_space.shape[0])
+                action = np.random.uniform(-1.0, 1.0, size=self.env.action_space.shape[0])
             else:
                 action = self.actor_network.sample_action(state, noise=self.stdev)
             
@@ -164,21 +163,14 @@ class DDPGAgent:
             ball_pos = np.array([ball.x, ball.y])
             dist = np.linalg.norm(robot_pos - ball_pos)
 
-            if (dist > 100):
-                reward += 10 / dist
-            if (dist < 170):
-                reward += 0.1
-                count += 1
-                #if (count == 10):
-                    #done = True
-            if (steps == 5000):
-                done = True
-            if (np.abs(robot.x) > 4500 or np.abs(robot.y) > 3000):
-                done = True
-                #reward += -1.0
-            if (np.abs(ball.x) > 4500 or np.abs(ball.y) > 3000):
+            reward += 10 / dist
+              #if (count == 10):
+                #done = True
+            if (np.abs(robot.x) > 4500 or np.abs(robot.y) > 3000 or np.abs(ball.x) > 4500 or np.abs(ball.y) > 3000):
                 done = True
                 #reward += -0.5
+            if (steps == 1000):
+                done = True
 
             exp = Experience(state, action, reward, next_state, done)
 
@@ -310,7 +302,7 @@ class DDPGAgent:
 
 
 def main():
-    N_EPISODES = 1000
+    N_EPISODES = 10000
     agent = DDPGAgent()
     history = agent.play(n_episodes=N_EPISODES)
 

@@ -9,7 +9,7 @@ import numpy as np
 
 class ActorNetwork(tf.keras.Model):
 
-    ACTION_RANGE = 2.0
+    ACTION_RANGE = 1.0
 
     def __init__(self, action_space):
 
@@ -19,11 +19,11 @@ class ActorNetwork(tf.keras.Model):
 
         self.optimizer = tf.keras.optimizers.Adam(lr=0.001)
 
-        self.dense1 = kl.Dense(64, activation="relu")
+        self.dense1 = kl.Dense(8, activation="relu")
 
         self.bn1 = kl.BatchNormalization()
 
-        self.dense2 = kl.Dense(64, activation="relu")
+        self.dense2 = kl.Dense(8, activation="relu")
 
         self.bn2 = kl.BatchNormalization()
 
@@ -68,11 +68,11 @@ class CriticNetwork(tf.keras.Model):
 
         self.optimizer = tf.keras.optimizers.Adam(lr=0.001)
 
-        self.dense1 = kl.Dense(64, activation="relu")
+        self.dense1 = kl.Dense(8, activation="relu")
 
         self.bn1 = kl.BatchNormalization()
 
-        self.dense2 = kl.Dense(64, activation="relu")
+        self.dense2 = kl.Dense(8, activation="relu")
 
         self.bn2 = kl.BatchNormalization()
 

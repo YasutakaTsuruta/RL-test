@@ -26,8 +26,6 @@ class get_ball_env(gym.Env):
         self.fin_pos = np.array([0, 0.09])
         self.cycle = 1.0 / 60.0
         self.steps = 0
-        self.fig = plt.figure()
-        self.fig.show()
         self.sender = sim_sender.SimSender()
         rcv = simple_receiver.receiver()
         self.robot = rcv.robot
@@ -65,6 +63,7 @@ class get_ball_env(gym.Env):
         # ステップを進める処理
         action = np.array([action[0], action[1], omega])
         self.sender.send_commands(action)
+        time.sleep(1.0/60.0)
         reward = 0.0
         done = False
         self.steps = self.steps + 1
