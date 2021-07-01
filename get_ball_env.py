@@ -14,20 +14,18 @@ from proto import grSim_Packet_pb2
 class get_ball_env(gym.Env):
     def __init__(self):
         # アクションの数の設定
-        # robot_x, robot_y, robot_omega
-        act_high = np.array([1.0, 1.0, 1.0])
+        # robot_x, robot_y
+        act_high = np.array([1.0, 1.0])
         self.action_space = gym.spaces.Box(low=-act_high, high=act_high) 
 
         # 状態空間の設定 
-        # robot_x, robot_y, robot_theta, ball_x, ball_y 
-        obs_high = np.array([5.0, 3.5, np.pi, 4.5, 3.0])
+        # ball_x, ball_y 
+        obs_high = np.array([5.0, 5.0])
         self.observation_space = gym.spaces.Box(low=-obs_high, high=obs_high)
 
         self.fin_pos = np.array([0, 0.09])
         self.cycle = 1.0 / 60.0
         self.steps = 0
-        self.fig = plt.figure()
-        self.fig.show()
         self.sender = sim_sender.SimSender()
         rcv = simple_receiver.receiver()
         self.robot = rcv.robot
@@ -42,7 +40,7 @@ class get_ball_env(gym.Env):
         ball = packet.replacement.ball
         ball.x = 9.0 * np.random.rand() - 4.5
         ball.y = 6.0 * np.random.rand() - 3.0
-        ball_vel = 6.5 * np.random.rand()
+        ball_vel = 0.0 #6.5 * np.random.rand()
         theta = 2 * np.pi * np.random.rand()
         ball.vx = ball_vel * np.cos(theta)
         ball.vy = ball_vel * np.sin(theta)
@@ -61,9 +59,11 @@ class get_ball_env(gym.Env):
         self.steps = 0
         return np.concatenate([self.robot_pos, self.ball_pos])
 
-    def step(self, action):
+    def step(self, action, omega):
         # ステップを進める処理
+        action = np.array([action[0], action[1], omega])
         self.sender.send_commands(action)
+        time.sleep(1.0/60.0)
         reward = 0.0
         done = False
         self.steps = self.steps + 1

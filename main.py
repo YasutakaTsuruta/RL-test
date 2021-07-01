@@ -15,6 +15,15 @@ from models import ActorNetwork, CriticNetwork
 
 from get_ball_env import get_ball_env
 
+def make_omega(state):
+  return 2.0 * np.arctan2(state[1], state[0]) / np.pi
+
+def make_state(robot, ball):
+  theta = -robot.theta
+  x = ball.x - robot.x
+  y = ball.y - robot.y
+  return np.array([x * np.cos(theta) - y * np.sin(theta), x * np.sin(theta) + y * np.cos(theta)])
+
 @dataclass
 class Experience:
 
@@ -35,9 +44,7 @@ class DDPGAgent:
 
     MIN_EXPERIENCES = 300
 
-    ACTION_SPACE = 3
-
-    OBSERVATION_SPACE = 5
+    OBSERVATION_SPACE = 2
 
     UPDATE_PERIOD = 4
 
@@ -53,15 +60,15 @@ class DDPGAgent:
 
         self.env = get_ball_env()
 
-        self.actor_network = ActorNetwork(action_space=self.ACTION_SPACE)
+        self.actor_network = ActorNetwork(action_space=self.env.action_space.shape[0])
 
-        self.target_actor_network = ActorNetwork(action_space=self.ACTION_SPACE)
+        self.target_actor_network = ActorNetwork(action_space=self.env.action_space.shape[0])
 
         self.critic_network = CriticNetwork()
 
         self.target_critic_network = CriticNetwork()
 
-        self.stdev = 0.2
+        self.stdev = 0.4
 
         self.buffer = ReplayBuffer(max_experiences=self.MAX_EXPERIENCES)
 
@@ -78,7 +85,7 @@ class DDPGAgent:
         dummy_state = np.random.normal(0, 0.1, size=self.OBSERVATION_SPACE)
         dummy_state = (dummy_state[np.newaxis, ...]).astype(np.float32)
 
-        dummy_action = np.random.normal(0, 0.1, size=self.ACTION_SPACE)
+        dummy_action = np.random.normal(0, 0.1, size=self.env.action_space.shape[0])
         dummy_action = (dummy_action[np.newaxis, ...]).astype(np.float32)
 
         self.actor_network.call(dummy_state)
@@ -96,7 +103,6 @@ class DDPGAgent:
         recent_scores = collections.deque(maxlen=10)
 
         for n in range(n_episodes):
-
 
             if n <= self.START_EPISODES:
                 total_reward, localsteps = self.play_episode(random=True)
@@ -134,43 +140,37 @@ class DDPGAgent:
 
         done = False
 
-        state = self.env.reset()
+        self.env.reset()
+        state = make_state(self.env.robot, self.env.ball)
 
         while not done:
 
             if random:
-                action = np.random.uniform(-1, 1, size=self.ACTION_SPACE)
+                action = np.random.uniform(-1.0, 1.0, size=self.env.action_space.shape[0])
             else:
                 action = self.actor_network.sample_action(state, noise=self.stdev)
-                print(action)
             
             #next_state, reward, done, _ = self.env.step(action)
-            self.env.step(action)
+            self.env.step(action, make_omega(state))
 
             steps += 1
 
             robot = self.env.robot
             ball = self.env.ball
-
-            next_state = np.array([robot.x, robot.y, robot.theta, ball.x, ball.y])
-            
-            reward = -0.005
+            next_state = make_state(robot, ball) 
+            reward = 0.0
             robot_pos = np.array([robot.x, robot.y])
             ball_pos = np.array([ball.x, ball.y])
-            reward += 1 / np.linalg.norm(robot_pos - ball_pos)
-            if (np.linalg.norm(robot_pos - ball_pos) < 170):
-                reward += 0.1
-                count += 1
-                if (count == 10):
-                    True
+            dist = np.linalg.norm(robot_pos - ball_pos)
+
+            reward += 10 / dist
+              #if (count == 10):
+                #done = True
+            if (np.abs(robot.x) > 4500 or np.abs(robot.y) > 3000 or np.abs(ball.x) > 4500 or np.abs(ball.y) > 3000):
+                done = True
+                #reward += -0.5
             if (steps == 1000):
                 done = True
-            if (np.abs(robot.x) > 4500 or np.abs(robot.y) > 3000):
-                done = True
-                reward += -1.0
-            if (np.abs(ball.x) > 4500 or np.abs(ball.y) > 3000):
-                done = True
-                reward += -0.5
 
             exp = Experience(state, action, reward, next_state, done)
 
@@ -280,13 +280,14 @@ class DDPGAgent:
 
             done = False
 
-            state = env.reset()
+            self.env.reset()
+            state = make_state(env.robot, env.ball)
 
             while not done:
 
                 action = self.actor_network.sample_action(state, noise=False)
 
-                next_state, reward, done, _ = env.step(action)
+                next_state, reward, done, _ = env.step(action, make_omega(state))
 
                 state = next_state
 
@@ -301,7 +302,7 @@ class DDPGAgent:
 
 
 def main():
-    N_EPISODES = 1000
+    N_EPISODES = 10000
     agent = DDPGAgent()
     history = agent.play(n_episodes=N_EPISODES)
 
